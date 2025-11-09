@@ -1,0 +1,175 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+{% block title %}Chat - {{ product.name }}{% endblock %}
+{% block content %}
+
+<section class="chat-section">
+  <a href="{% url 'shop:product_detail' product.id %}" class="product-tag">
+    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+    <div>
+      <h2>{{ product.name }}</h2>
+      <p class="price">${{ product.price }}</p>
+      <p class="desc">{{ product.description|truncatewords:20 }}</p>
+    </div>
+  </a>
+
+  <div class="vote-buttons">
+    <form id="reaction-form" method="POST">
+      {% csrf_token %}
+      <button type="button" class="thumb" data-reaction="like">
+        <i class="fa-solid fa-thumbs-up"></i> Helpful (<span id="like-count">{{ likes }}</span>)
+      </button>
+      <button type="button" class="thumb" data-reaction="dislike">
+        <i class="fa-solid fa-thumbs-down"></i> Not Great (<span id="dislike-count">{{ dislikes }}</span>)
+      </button>
+    </form>
+  </div>
+
+  <div class="chat-thread">
+    {% for m in messages %}
+      <div class="message {% if m.sender == user %}sent{% else %}received{% endif %}">
+        <div class="avatar">{{ m.sender.username|slice:":1" }}</div>
+        <div class="bubble">
+          <strong>{{ m.sender.username }}</strong>
+          <p>{{ m.text }}</p>
+          <span>{{ m.created_at|timesince }} ago</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <form method="POST" class="chat-input">
+    {% csrf_token %}
+    <input type="text" name="text" placeholder="Type your message..." required>
+    <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+  </form>
+</section>
+
+<script>
+document.querySelectorAll(".thumb").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const reaction = btn.getAttribute("data-reaction");
+    fetch("{% url 'shop:react_to_product' product.id %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "reaction=" + reaction
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "ok") location.reload();
+    });
+  });
+});
+</script>
+
+<style>
+.chat-section {
+  padding: 40px 100px;
+  font-family: "Inter", sans-serif;
+  background: #f7f8fa;
+}
+
+/* ✅ Product Card - Now Clickable */
+.product-tag {
+  display: flex;
+  gap: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: 0.3s;
+}
+.product-tag:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+.product-tag img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.price {
+  color: #0071dc;
+  font-weight: 600;
+  margin: 6px 0;
+}
+.desc {
+  color: #555;
+  font-size: 14px;
+}
+
+.vote-buttons {
+  text-align: center;
+  margin: 10px 0 25px;
+}
+.vote-buttons button {
+  border: none;
+  background: #eef3ff;
+  padding: 10px 25px;
+  border-radius: 30px;
+  margin: 0 10px;
+  cursor: pointer;
+  color: #0071dc;
+  font-weight: 600;
+}
+
+.chat-thread {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+  max-height: 500px;
+  overflow-y: auto;
+}
+.message {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+.message.sent { flex-direction: row-reverse; }
+.avatar {
+  background: #0071dc;
+  color: white;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.bubble {
+  background: #f3f4f6;
+  padding: 10px 15px;
+  border-radius: 12px;
+}
+.message.sent .bubble {
+  background: #d9ebff;
+}
+.chat-input {
+  display: flex;
+  margin-top: 20px;
+  gap: 10px;
+}
+.chat-input input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+.chat-input button {
+  background: #0071dc;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+</style>
+{% endblock %}

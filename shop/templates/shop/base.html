@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SmartShop{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script src="{% static 'js/script.js' %}" defer></script>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="/">
+      <img src="{% static 'images/walmart-logo.svg' %}" alt="Logo" class="logo">
+      </a>
+      <div class="location">
+        <p class="small">Pickup or delivery?</p>
+        <span>Choose your location ▼</span>
+      </div>
+    </div>
+
+    <div class="search-container" style="margin-left:140px; width:600px; flex-grow:0">
+      <form action="{% url 'shop:search' %}" method="GET">
+        <input type="text" name="q" placeholder="Search everything at SmartShop online and in store">
+        <button type="submit" class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+    </div>
+
+
+    <div class="topbar-right">
+  <a href="#">My Items</a>
+
+  {% if user.is_authenticated %}
+    <span class="welcome-text">Hi, {{ user.username }}!</span>
+    <a href="{% url 'shop:logout' %}" class="logout-link">Logout</a>
+  {% else %}
+    <a href="{% url 'shop:login' %}">Sign In</a>
+  {% endif %}
+
+      {% if request.user.is_authenticated %}
+  <a href="{% url 'shop:notifications' %}" class="nav-link">🔔</a>
+{% endif %}
+
+</div>
+
+  </header>
+
+  <!-- Menu Bar -->
+  <nav class="menu-bar">
+    <ul>
+      <li><a href="#">Departments ▼</a></li>
+      <li><a href="#">Services ▼</a></li>
+      <li><a href="#">Get it Fast</a></li>
+      <li><a href="#">New Arrivals</a></li>
+      <li><a href="#">Rollbacks & More</a></li>
+      <li><a href="#">Gift Shop</a></li>
+      <li><a href="#">Walmart+</a></li>
+    </ul>
+  </nav>
+
+  {% block content %}
+  {% endblock %}
+
+</body>
+</html>

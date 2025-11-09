@@ -1,0 +1,495 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ product.name }} - SmartShop{% endblock %}
+{% block content %}
+{% load static %}
+
+<section class="product-page">
+  <div class="product-wrapper">
+
+    <!-- LEFT SECTION: IMAGE + DESCRIPTION -->
+    <div class="left-section">
+      <div class="product-gallery">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="main-image">
+        {% else %}
+          <img src="{% static 'images/placeholder.png' %}" alt="No image" class="main-image">
+        {% endif %}
+      </div>
+
+      {% if purchased_by_circle %}
+        <p class="circle-info">✓ Purchased by your {{ relation }}</p>
+      {% endif %}
+
+      <!-- ✅ About this item -->
+      <div class="about-item">
+        <h3>About this item</h3>
+
+        {% if product.description %}
+          <p class="product-description">
+            {{ product.description }}
+          </p>
+        {% else %}
+          <p class="product-description">
+            This product offers great quality, durability, and performance, making it a top choice for users looking for value and innovation.
+          </p>
+        {% endif %}
+
+        <div class="smart-summary">
+          <h4>Smart summary</h4>
+          <ul>
+            <li><b>Display:</b> {{ product.display|default:"High-resolution Retina display with rich colors" }}</li>
+            <li><b>Performance:</b> {{ product.performance|default:"Fast and power-efficient processor for smooth multitasking" }}</li>
+            <li><b>Camera:</b> {{ product.camera|default:"High-quality dual camera system for vibrant photos and videos" }}</li>
+            <li><b>Battery:</b> {{ product.battery|default:"All-day battery with fast charging support" }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SECTION -->
+    <div class="right-section">
+      <div class="product-meta">
+        <span class="brand">{{ product.brand|default:"SmartShop" }}</span>
+        <h2 class="product-title">{{ product.name }}</h2>
+        <div class="rating">
+          {% for i in "12345" %}
+            {% if forloop.counter <= product.rating|floatformat:0 %}
+              <i class="fa-solid fa-star"></i>
+            {% else %}
+              <i class="fa-regular fa-star"></i>
+            {% endif %}
+          {% endfor %}
+          <span class="rating-value">{{ product.rating|floatformat:1 }}</span>
+          <span class="rating-count">(6,318 ratings)</span>
+        </div>
+      </div>
+
+      <p class="color-label">Color: <b>{{ product.color|default:"Black" }}</b></p>
+      <div class="color-circle"></div>
+
+      <div class="price-section">
+        <p class="price">${{ product.price }}</p>
+        {% if product.old_price %}
+          <span class="old-price">₹{{ product.old_price }}</span>
+        {% endif %}
+      </div>
+
+      <div class="delivery-section">
+        <p><i class="fa-solid fa-truck-fast"></i> Free shipping · Free 14-day returns</p>
+      </div>
+
+      <button class="add-to-cart">Add to cart</button>
+
+      <!-- ✅ Ask My Circle Button -->
+      <button id="askCircleBtn" class="ask-circle-btn">Ask My Circle</button>
+
+      <!-- ✅ Ask My Circle Confirmation Modal -->
+<div id="askCircleModal" class="modal">
+  <div class="modal-content">
+    <h2>Ask My Circle</h2>
+    <p class="status-text">✅ Sent to your Circle</p>
+    <div class="circle-icon">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <p class="wait-text">Now wait for your friends to respond</p>
+    <p class="notify-text">You will be notified about replies</p>
+    <button id="doneBtn">Done</button>
+  </div>
+</div>
+
+
+      <div class="plan-box">
+        <h4>SmartShop Protection Plan</h4>
+        <label>
+          <input type="checkbox">
+          2-Year Plan – ₹49.00
+        </label>
+      </div>
+
+      <div class="extra-options">
+        <h4>How you'll get this item:</h4>
+        <div class="delivery-options">
+          <div class="option">
+            <i class="fa-solid fa-box"></i>
+            <span>Shipping</span>
+          </div>
+          <div class="option">
+            <i class="fa-solid fa-store"></i>
+            <span>Pickup</span>
+          </div>
+          <div class="option">
+            <i class="fa-solid fa-truck"></i>
+            <span>Delivery</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ✅ JS Logic for Circle Permission -->
+<script>
+document.getElementById("askCircleBtn").addEventListener("click", function() {
+  const permission = localStorage.getItem("circlePermission");
+  const productId = "{{ product.id }}";
+  const modal = document.getElementById("askCircleModal");
+  const doneBtn = document.getElementById("doneBtn");
+
+  if (permission !== "granted") {
+    const allow = confirm("Allow permission to access your circle?");
+    if (!allow) {
+      localStorage.setItem("circlePermission", "denied");
+      alert("❌ Permission denied. You can enable it later to use Ask My Circle.");
+      return;
+    }
+    localStorage.setItem("circlePermission", "granted");
+  }
+
+  // ✅ Fetch user’s circle members first
+  fetch("{% url 'shop:get_my_circle' %}")
+    .then(res => res.json())
+    .then(data => {
+      const members = data.members;
+      if (members.length === 0) {
+        alert("You have no members in your circle yet.");
+        return;
+      }
+
+      // ✅ Send message to all circle members
+      const formData = new FormData();
+      formData.append("product_id", productId);
+      formData.append("message", `Hey! I'm thinking about buying {{ product.name }}. What do you think?`);
+      members.forEach(m => formData.append("recipients[]", m.id));
+
+      fetch("{% url 'shop:ask_my_circle' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        body: formData,
+      })
+      .then(res => res.json())
+      .then(response => {
+        if (response.status === "ok") {
+          modal.style.display = "flex"; // Show modal
+        } else {
+          alert("Something went wrong sending to your circle.");
+        }
+      });
+    });
+
+  // Close modal on “Done”
+  doneBtn.addEventListener("click", function() {
+    modal.style.display = "none";
+  });
+});
+</script>
+
+
+
+
+<style>
+.product-page {
+  background: #fff;
+  padding: 40px 80px;
+  font-family: "Inter", sans-serif;
+}
+
+.product-wrapper {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+.left-section {
+  background: #fff;
+}
+
+.product-gallery {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  background: #f8f8f8;
+}
+
+.main-image {
+  width: 400px;
+  height: 400px;
+  object-fit: contain;
+}
+
+.circle-info {
+  color: #0071dc;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.about-item {
+  margin-top: 30px;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.about-item h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.product-description {
+  color: #333;
+  line-height: 1.6;
+  font-size: 15px;
+  margin-bottom: 15px;
+}
+
+.smart-summary h4 {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.smart-summary ul {
+  list-style: disc;
+  padding-left: 20px;
+  color: #333;
+  line-height: 1.6;
+}
+
+.right-section {
+  border-left: 1px solid #e5e7eb;
+  padding-left: 40px;
+}
+
+.brand {
+  color: #0071dc;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.product-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.rating {
+  color: #f5a623;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.rating-value {
+  color: #111;
+  font-weight: 500;
+}
+
+.rating-count {
+  color: #555;
+  font-size: 14px;
+}
+
+.color-label {
+  margin-top: 10px;
+}
+
+.color-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #111;
+  margin-top: 5px;
+  border: 2px solid #ccc;
+}
+
+.price-section {
+  margin-top: 20px;
+}
+
+.price {
+  font-size: 28px;
+  font-weight: bold;
+  color: #111;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #777;
+  font-size: 16px;
+  margin-left: 8px;
+}
+
+.delivery-section {
+  margin-top: 10px;
+  color: #333;
+  font-size: 14px;
+}
+
+.add-to-cart {
+  background: #0071dc;
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-to-cart:hover {
+  background: #004f9a;
+}
+
+.plan-box {
+  background: #f5f7fa;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 25px;
+  font-size: 14px;
+}
+
+.plan-box h4 {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.extra-options {
+  margin-top: 30px;
+}
+
+.extra-options h4 {
+  margin-bottom: 10px;
+}
+
+.delivery-options {
+  display: flex;
+  gap: 15px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #ddd;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.option i {
+  font-size: 20px;
+  color: #0071dc;
+}
+
+.option:hover {
+  background: #f0f8ff;
+  border-color: #0071dc;
+}
+
+  /* ✅ Ask My Circle button styling */
+.ask-circle-btn {
+  background: #00b386;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.ask-circle-btn:hover {
+  background: #008f6a;
+}
+
+
+  /* Modal styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  font-family: "Inter", sans-serif;
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.status-text {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.circle-icon {
+  background: #e8f5e9;
+  color: #4caf50;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px auto;
+  font-size: 36px;
+}
+
+.wait-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #4a4af5;
+  margin-top: 10px;
+}
+
+.notify-text {
+  font-size: 14px;
+  color: #777;
+  margin-top: 5px;
+}
+
+#doneBtn {
+  margin-top: 20px;
+  background: #0071dc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 30px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#doneBtn:hover {
+  background: #004f9a;
+}
+
+</style>
+{% endblock %}

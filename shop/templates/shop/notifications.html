@@ -1,0 +1,66 @@
+{% extends 'shop/base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+
+<section class="notifications-page">
+  <h2>🛍️ Product Review Requests</h2>
+
+  {% if products %}
+    <div class="notification-list">
+      {% for p in products %}
+  <a href="{% url 'shop:chat_room' p.id %}" class="notif-card">
+    <img src="/media/{{ p.image }}" alt="{{ p.name }}">
+    <div class="info">
+      <h3>{{ p.name }}</h3>
+      <p>${{ p.price }}</p>
+      <p>👍 {{ feedback_summary.p.id.likes }} | 👎 {{ feedback_summary.p.id.dislikes }}</p>
+      <span>Click to open chat 💬</span>
+    </div>
+  </a>
+{% endfor %}
+
+    </div>
+  {% else %}
+    <p>No product review requests yet.</p>
+  {% endif %}
+</section>
+
+<style>
+.notifications-page {
+  padding: 40px 100px;
+  background: #f7f8fa;
+  font-family: "Inter", sans-serif;
+}
+.notification-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.notif-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-decoration: none;
+  color: inherit;
+  transition: 0.3s;
+}
+.notif-card:hover {
+  transform: translateY(-5px);
+}
+.notif-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.info span {
+  color: #0071dc;
+  font-weight: 500;
+  font-size: 14px;
+}
+</style>
+{% endblock %}

@@ -20,6 +20,6 @@ staticfiles/
 # Environment variables
 .env
 
-# IDE
+# IDEs
 .vscode/
 .idea/

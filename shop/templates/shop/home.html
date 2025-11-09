@@ -1,0 +1,111 @@
+{% extends 'shop/base.html' %}
+{% block title %}Home - SmartShop{% endblock %}
+{% block content %}
+{% load static %}
+
+<!-- 🔹 Banner Carousel Section -->
+<div class="banner-container">
+  <div class="banner-slide fade">
+    <img src="{% static 'images/banner1.jpg' %}" alt="Walmart Deals 1">
+    <div class="banner-text">
+      <h2><span>Walmart</span> DEALS</h2>
+      <p class="date">JULY 8–13 ONLY!</p>
+      <p class="offer">Wow—up to 40% off top brands</p>
+      <button class="shop-btn">Shop Deals</button>
+    </div>
+  </div>
+
+  <div class="banner-slide fade">
+    <img src="{% static 'images/banner2.jpg' %}" alt="Walmart Deals 2">
+    <div class="banner-text">
+      <h2><span>Big</span> Savings</h2>
+      <p class="date">Limited Time Offer</p>
+      <p class="offer">Up to 50% off on Fashion Picks</p>
+      <button class="shop-btn">Shop Now</button>
+    </div>
+  </div>
+
+  <div class="banner-slide fade">
+    <img src="{% static 'images/banner3.jpg' %}" alt="Walmart Deals 3">
+    <div class="banner-text">
+      <h2><span>SmartShop</span> Exclusives</h2>
+      <p class="date">This Week Only!</p>
+      <p class="offer">Save Big on Home Essentials</p>
+      <button class="shop-btn">Explore Deals</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dots below banner -->
+<div class="dots" style="text-align:center">
+  <span class="dot"></span>
+  <span class="dot"></span>
+  <span class="dot"></span>
+</div>
+
+<!-- 🔹 Product Section -->
+<section class="product-section">
+  <h2>The latest they’ll love</h2>
+  <p>Spoil them with new finds from top brands.</p>
+
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="{% static 'images/product1.avif' %}" alt="Product 1">
+      <button class="option-btn">Options</button>
+      <p class="price">$7.97</p>
+      <p class="desc">KONG® Snacks® Bacon & Cheese Dog Treats, Small</p>
+    </div>
+
+    <div class="product-card">
+      <img src="{% static 'images/product2.avif' %}" alt="Product 2">
+      <button class="option-btn">Options</button>
+      <p class="price">Now <span class="green">$13.96</span> <span class="old">$15.99</span></p>
+      <p class="desc">KONG® Floppy Knots Bunny Dog Toy, Small/Medium</p>
+    </div>
+
+    <div class="product-card">
+      <img src="{% static 'images/product3.avif' %}" alt="Product 3">
+      <button class="option-btn">Add</button>
+      <p class="price">Now <span class="green">$15.98</span> <span class="old">$17.98</span></p>
+      <p class="desc">Benebone Essentials 2-Pack Wishbone Bacon & Chicken M/L</p>
+    </div>
+
+    <div class="product-card">
+      <img src="{% static 'images/product4.avif' %}" alt="Product 4">
+      <button class="option-btn">Options</button>
+      <p class="price">$29.94</p>
+      <p class="desc">Benebone Medium 4-Pack Dog Chew Toys</p>
+    </div>
+
+    <div class="product-card">
+      <img src="{% static 'images/product5.avif' %}" alt="Product 5">
+      <button class="option-btn">Options</button>
+      <p class="price">Now <span class="green">$4.99</span> <span class="old">$8.99</span></p>
+      <p class="desc">KONG® SqueakAir® Balls Dog Toy, Medium, 3-Pack</p>
+    </div>
+  </div>
+</section>
+
+<script>
+let slideIndex = 0;
+showSlides();
+
+function showSlides() {
+  let i;
+  const slides = document.getElementsByClassName("banner-slide");
+  const dots = document.getElementsByClassName("dot");
+  for (i = 0; i < slides.length; i++) {
+    slides[i].style.display = "none";
+  }
+  slideIndex++;
+  if (slideIndex > slides.length) { slideIndex = 1 }
+  for (i = 0; i < dots.length; i++) {
+    dots[i].classList.remove("active");
+  }
+  slides[slideIndex-1].style.display = "block";
+  dots[slideIndex-1].classList.add("active");
+  setTimeout(showSlides, 4000); // Change every 4 seconds
+}
+</script>
+
+{% endblock %}

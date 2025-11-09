@@ -1,0 +1,170 @@
+{% extends 'shop/base.html' %}
+{% block title %}Search Results - SmartShop{% endblock %}
+{% block content %}
+{% load static %}
+
+<section class="product-section">
+  {% if query %}
+    <div class="results-header">
+      <h2 class="section-title">Search Results for "{{ query }}"</h2>
+
+      <!-- ✅ Circle Access Toggle -->
+      <label class="switch">
+        <input type="checkbox" id="circlePermissionSwitch">
+        <span class="slider round"></span>
+      </label>
+      <span class="switch-label">Allow circle access</span>
+    </div>
+  {% else %}
+    <h2 class="section-title">Search Results</h2>
+  {% endif %}
+
+  {% if products %}
+    <div class="product-grid">
+      {% for product in products %}
+      <a class="product-card" href="{% url 'shop:product_detail' product.id %}" style="text-decoration:none">
+        <div class="product-image">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'images/placeholder.png' %}" alt="No image">
+          {% endif %}
+
+          {% if product.circle_purchase %}
+            <span class="circle-badge" title="Purchased by your {{ product.circle_purchase }}">
+              ✓ Purchased
+            </span>
+          {% endif %}
+        </div>
+
+        <button class="option-btn">Options</button>
+
+        <div class="product-info">
+          <div class="price-section">
+            <span class="new-price">${{ product.price }}</span>
+            {% if product.old_price %}
+              <span class="old-price">${{ product.old_price }}</span>
+            {% endif %}
+          </div>
+
+          <p class="product-name">{{ product.name }}</p>
+
+          {% if product.rating %}
+            <div class="rating">
+              {% for i in "12345" %}
+                {% if forloop.counter <= product.rating|floatformat:0 %}
+                  <i class="fa-solid fa-star"></i>
+                {% else %}
+                  <i class="fa-regular fa-star"></i>
+                {% endif %}
+              {% endfor %}
+              <span class="rating-value">{{ product.rating|floatformat:1 }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="no-results">No products found for "{{ query }}"</p>
+  {% endif %}
+</section>
+
+<!-- ✅ Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const switchInput = document.getElementById("circlePermissionSwitch");
+  const storedPermission = localStorage.getItem("circlePermission");
+
+  // First visit → ask user
+  if (!storedPermission) {
+    const allow = confirm("Allow permission to access your circle?");
+    localStorage.setItem("circlePermission", allow ? "granted" : "denied");
+  }
+
+  // Update switch state
+  const permission = localStorage.getItem("circlePermission");
+  switchInput.checked = permission === "granted";
+  toggleBadges(permission === "granted");
+
+  // When user toggles switch manually
+  switchInput.addEventListener("change", function () {
+    const allowed = switchInput.checked;
+    localStorage.setItem("circlePermission", allowed ? "granted" : "denied");
+    toggleBadges(allowed);
+  });
+
+  function toggleBadges(allowed) {
+    const badges = document.querySelectorAll(".circle-badge");
+    badges.forEach(badge => {
+      badge.style.display = allowed ? "inline-block" : "none";
+    });
+  }
+});
+</script>
+
+<!-- ✅ Switch CSS -->
+<style>
+.results-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  margin-left: 905px;
+
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
+  border-radius: 24px;
+
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 21px;
+  width: 21px;
+  left: 1px;
+  bottom: 1px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #0071dc;
+}
+
+input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+.switch-label {
+  font-size: 14px;
+  color: #333;
+  margin-left: 4px;
+}
+</style>
+
+{% endblock %}
